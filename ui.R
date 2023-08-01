@@ -1,24 +1,30 @@
 library(shiny)
 
-# Define UI for application that draws a histogram
 fluidPage(
 
-    # Application title
-    titlePanel("Test of Plot"),
+    titlePanel("WIRI Tool Prototype"),
 
-    # Sidebar with a slider input for number of bins
     sidebarLayout(
         sidebarPanel(
           
-          titlePanel("Upload CSV File"),
-          fileInput("file", "Choose a CSV file"),
-          textOutput("file_message")
+          titlePanel("Upload Survey CSV File"),
+          fileInput("file1", "Choose a CSV file"),
+          textOutput("file_message1"),
+          
+          titlePanel("Upload Contracts CSV File"),
+          fileInput("file2", "Choose a CSV file"),
+          textOutput("file_message2"),
+          
+          textOutput("merge_message"),
+          textOutput("weights_message"),
+
+          uiOutput("download_button")
 
         ),
 
-        # Show a plot of the generated distribution
         mainPanel(
-            plotOutput("wiri_cross")
+            plotOutput("wiri_cross"),
+            plotOutput("histogram_plot")
         )
     )
 )
