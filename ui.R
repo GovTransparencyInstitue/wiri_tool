@@ -1,5 +1,6 @@
 library(shiny)
 library(shinythemes)
+library(plotly)
 
 fluidPage(theme = shinytheme("flatly"),
 
@@ -21,6 +22,7 @@ fluidPage(theme = shinytheme("flatly"),
                               
                               br(),
                               h2("Diagnostics"),
+                              
                               textOutput("key_message"),
                               textOutput("merge_message"),
                               textOutput("weights_message")
@@ -51,22 +53,34 @@ fluidPage(theme = shinytheme("flatly"),
                           ")))),
 
                     tabPanel("Dashboard",
-                             selectInput("dropdown", "Select an option:", 
+                             h2("Water Integrity Risk Indicator Results"),
+                             fluidRow(
+                               column(10,
+                                      uiOutput("kpi_averages")
+                               ),
+                               column(2,
+                                      selectInput("dropdown", "Select an indicator:",
                                          choices = c("WIRI", "Operations", "Investments", "Interactions"),
-                                         selected = "WIRI"),
+                                         selected = "WIRI"))
+                               ),
                              fluidRow(
                                column(5,
                                       fluidPage(
-                                        div(style = "height: 800px; overflow-y: scroll;",
+                                        div(style = "height: 500px; overflow-y: scroll;",
                                             tableOutput("wiri_table")
                                         ))),
                                column(7,
-                                      plotOutput("wiri_cross"),
-                                      plotOutput("number_contracts")
-                                      )
+                                      
+                                      fluidRow(
+                                      column(6,
+                                            plotlyOutput("wiri_cross", height = "250px")
+                                            ),
+                                      column(6,
+                                             plotlyOutput("number_contracts", height = "250px")
+                                             )
+                                      ),
+                                      plotlyOutput("wiri_time", height = "250px")                                      )
                              ),
-                             br(),
-                             plotOutput("wiri_time"),
                              br(),
                              verbatimTextOutput("output_text"),
                              br(),

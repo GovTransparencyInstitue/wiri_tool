@@ -2,6 +2,7 @@ library(shiny)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
+library(plotly)
 
 function(input, output, session) {
   
@@ -73,7 +74,7 @@ function(input, output, session) {
   
     }
   })
-
+  
   submitted_values <- reactiveValues(keywords_cui = "agua+|acua+|hidr+", keywords_op = "maquinaria+|equip+", keywords_inv = "construc+")
   runClick <- reactiveVal(0)
   
@@ -481,7 +482,14 @@ df_wiri_time <- reactive({
   df_WIRI_ts()
 })
 
-output$wiri_cross <- renderPlot({
+# output$indicator_select <- renderUI({
+#   req(df_WIRI_ts())
+#   selectInput("dropdown", "Select an indicator:",
+#      choices = c("WIRI", "Operations", "Investments", "Interactions"),
+#      selected = "WIRI")
+# })
+
+output$wiri_cross <- renderPlotly({
   
   indicator = case_when(
     input$dropdown == "WIRI" ~ "WIRI",
@@ -499,12 +507,22 @@ output$wiri_cross <- renderPlot({
   data_bar <- df_wiri_cross() %>% 
     filter(buyer_city %in% top_cities$buyer_city)
   
-  data_bar %>%
-    ggplot(aes(x = get(indicator), y = reorder(buyer_city, get(indicator)))) +
+  bar <- data_bar %>%
+    mutate(Variable = paste(input$dropdown, round(get(indicator)))) %>% 
+    ggplot(aes(x = get(indicator), 
+               y = reorder(buyer_city, get(indicator)),
+               txt = Variable)
+               ) +
     geom_col(fill = "#14b795") +
     labs(y = NULL,
-         x = sprintf("%s score", input$dropdown))
+         x = NULL,
+         title = sprintf("%s score", input$dropdown)
+         )+
+    theme_classic() 
   
+  ggplotly(bar, tooltip = "txt") 
+  
+
   # data_bar %>%
   #   select(buyer_city, WIRI, wiri_inv, wiri_ops, wiri_cui) %>%
   #   gather(Indicator, Value, wiri_inv:wiri_cui) %>%
@@ -520,7 +538,7 @@ output$wiri_cross <- renderPlot({
 
 })
 
-output$wiri_time <- renderPlot({
+output$wiri_time <- renderPlotly({
 
   indicator4 = case_when(
     input$dropdown == "WIRI" ~ "WIRI_ts",
@@ -533,21 +551,34 @@ output$wiri_time <- renderPlot({
     group_by(buyer_city) %>%
     summarise(counts = sum(count_total)) %>%
     arrange(desc(counts)) %>%
-    head(10)
+    head(5)
 
   data_time <- df_wiri_time() %>%
     filter(buyer_city %in% top_cities$buyer_city)
 
-  data_time %>%
-    ggplot(aes(x = year, y = get(indicator4), group = 1)) +
+  time <- data_time %>%
+    mutate(Variable = paste0("<br>", input$dropdown, " ",round(get(indicator4)),
+                             "<br>", "Year ", year
+                             )) %>% 
+    ggplot(aes(x = year, y = get(indicator4), group = 1,
+               txt = Variable
+               )) +
     geom_line(color = "#14b795") +
-    facet_wrap(~buyer_city) +
+    facet_wrap(~buyer_city,
+               nrow = 1) +
     labs(x = NULL,
-         y = sprintf("%s time series", input$dropdown))
+         title = sprintf("%s time series", input$dropdown),
+         y = NULL
+         ) +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)
+          )
+  
+  ggplotly(time, tooltip = "txt")
 
 })
 
-output$number_contracts <- renderPlot({
+output$number_contracts <- renderPlotly({
   
   indicator2 = case_when(
     input$dropdown == "WIRI" ~ "count_total",
@@ -574,18 +605,34 @@ output$number_contracts <- renderPlot({
     group_by(buyer_city) %>%
     summarise(counts = sum(get(indicator2)))
 
-  data_contracts %>%
-    ggplot(aes(x = counts, y = reorder(buyer_city, counts))) +
+  contracts <- data_contracts %>%
+    mutate(Variable = paste0("<br>",input$dropdown, " ", counts)) %>% 
+    ggplot(aes(x = counts, y = reorder(buyer_city, counts),
+               txt = Variable
+               )) +
     geom_point(color = "#14b795") +
     geom_segment(aes(x = 0, xend = counts, y = buyer_city, yend = buyer_city),
                  color = "#14b795") +
-    labs(y = NULL, x = sprintf("%s number of contracts", input$dropdown))
+    labs(y = NULL, 
+         x = NULL,
+         title = sprintf("%s contracts", input$dropdown)
+         ) +
+    theme_classic()
   
-})
+  ggplotly(contracts, tooltip = "txt")
+  
+  })
 
 output$wiri_table <- renderTable({
   req(df_WIRI())
-  df_WIRI()
+  df_WIRI() %>% 
+    rename(
+      City = buyer_city,
+      Interactions = wiri_cui,
+      Operations = wiri_ops,
+      Investments = wiri_inv
+    ) %>% 
+    select(City, WIRI, Investments, Operations, Interactions) 
 })
 
 output$download_button <- renderUI({
@@ -594,12 +641,30 @@ output$download_button <- renderUI({
   }
 })
 
+output$kpi_averages <- renderUI({
+  
+  req(df_WIRI())
+  df <- df_WIRI()
+  m_wiri <- round(mean(df$WIRI, na.rm = T))
+  m_inv <- round(mean(df$wiri_inv, na.rm = T))
+  m_op <- round(mean(df$wiri_ops, na.rm = T))
+  m_cui <- round(mean(df$wiri_cui, na.rm = T))
+  
+  markdown(
+    sprintf(
+    "### Averages: WIRI (%s), Investments (%s), Operations (%s), Interactions (%s)",
+    m_wiri, m_inv, m_op, m_cui
+    ))
+  
+
+})
+
 output$wiri_csv <- downloadHandler(
   filename = function() {
     "wiri.csv"  
   },
   content = function(file) {
-    write.csv(df_wiri_cross(), file, row.names = FALSE)
+    write.csv(df_wiri_time(), file, row.names = FALSE)
   }
 )
 
