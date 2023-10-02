@@ -8,18 +8,30 @@ function(input, output, session) {
   
   # Maximum upload size 10mb
   options(shiny.maxRequestSize = 10*1024^2)
+  names_contracts <- c('contract_title', 'buyer_name', 'winner_name', 'buyer_city', 'final_value', 'bids_count', 'bid_deadline', 'firstcall_date', 'procedure_type', 'award_date')
+  names_survey <- c('buyer_city', 'year', 'n', 'bribes')
   
   # Upload surveys
   observeEvent(input$file1, {
-    req(input$file1)  # Check if the user has uploaded a file
-    if (tolower(tools::file_ext(input$file1$name)) == "csv") {
+    req(input$file1)  
+    
+    # Check if the file is a CSV
+    if (tolower(tools::file_ext(input$file1$name)) != "csv") {
+      output$file_message1 <- renderText("File is not a CSV")
+      return()  # Exit the observeEvent, as the file is not a CSV
+    }
+    
+    # Read the uploaded CSV file
+    data1 <- read.csv(input$file1$datapath)
+    
+    # Check if the variable names in the file are the same as in names_survey
+    if (all(colnames(data1) %in% names_survey) && length(colnames(data1)) == length(names_survey)) {
       output$file_message1 <- renderText("File is correct")
-      # Add code to process the CSV file here, if required
     } else {
-      output$file_message1 <- renderText("File is not correct")
+      output$file_message1 <- renderText("Variable names are incorrect")
     }
   })
-  
+
   # INPUT FILES
   input_survey <- reactive({
     req(input$file1)  # Check if the user has uploaded a file
@@ -31,7 +43,7 @@ function(input, output, session) {
     if (!is.null(input_survey())) {
       
       fluidPage(
-        titlePanel("Upload Contracts File"),
+        titlePanel("Upload Procurement File"),
         fileInput("file2", "Choose a CSV file"),
         textOutput("file_message2")
       )
@@ -39,18 +51,25 @@ function(input, output, session) {
     }
   })
   
-  
-  # Upload contracts
   observeEvent(input$file2, {
     req(input$file2)  
-    if (tolower(tools::file_ext(input$file2$name)) == "csv") {
+    
+    # Check if the file is a CSV
+    if (tolower(tools::file_ext(input$file2$name)) != "csv") {
+      output$file_message2 <- renderText("File is not a CSV")
+      return()  # Exit the observeEvent, as the file is not a CSV
+    }
+    
+    # Read the uploaded CSV file
+    data2 <- read.csv(input$file2$datapath)
+    
+    # Check if the variable names in the file are the same as in names_survey
+    if (all(colnames(data2) %in% names_contracts) && length(colnames(data2)) == length(names_contracts)) {
       output$file_message2 <- renderText("File is correct")
     } else {
-      output$file_message2 <- renderText("File is not correct")
+      output$file_message2 <- renderText("Variable names are incorrect")
     }
   })
-  
-
   
   # INPUT FILES
   input_contracts <- reactive({
@@ -99,7 +118,8 @@ function(input, output, session) {
     submitted_values$keywords_inv <- input$keywords_inv
     
     output$output_text <- renderPrint({
-      paste("Interactions:", submitted_values$keywords_cui,
+      paste("Keyords used. ",
+            "Interactions:", submitted_values$keywords_cui,
             "Operations:", submitted_values$keywords_op,
             "Investments:", submitted_values$keywords_inv)
     })
@@ -482,12 +502,6 @@ df_wiri_time <- reactive({
   df_WIRI_ts()
 })
 
-# output$indicator_select <- renderUI({
-#   req(df_WIRI_ts())
-#   selectInput("dropdown", "Select an indicator:",
-#      choices = c("WIRI", "Operations", "Investments", "Interactions"),
-#      selected = "WIRI")
-# })
 
 output$wiri_cross <- renderPlotly({
   
@@ -496,6 +510,20 @@ output$wiri_cross <- renderPlotly({
     input$dropdown == "Operations" ~ "wiri_ops",
     input$dropdown == "Investments" ~ "wiri_inv",
     input$dropdown == "Interactions" ~ "wiri_cui"
+  )
+  
+  mycolor = case_when(
+    input$dropdown == "WIRI" ~ "#14b795",
+    input$dropdown == "Operations" ~ "#8b0000",
+    input$dropdown == "Investments" ~ "#088efc",
+    input$dropdown == "Interactions" ~ "#ffb90f"
+  )
+  
+  myline = case_when(
+    input$dropdown == "WIRI" ~ mean(df_wiri_cross()$WIRI),
+    input$dropdown == "Operations" ~ mean(df_wiri_cross()$wiri_ops),
+    input$dropdown == "Investments" ~ mean(df_wiri_cross()$wiri_inv),
+    input$dropdown == "Interactions" ~ mean(df_wiri_cross()$wiri_cui)
   )
 
   top_cities <- df_summaries() %>% 
@@ -508,33 +536,42 @@ output$wiri_cross <- renderPlotly({
     filter(buyer_city %in% top_cities$buyer_city)
   
   bar <- data_bar %>%
-    mutate(Variable = paste(input$dropdown, round(get(indicator)))) %>% 
+    mutate(Variable = paste(input$dropdown, "Avg. Score ", round(get(indicator))),
+           fact = ifelse(get(indicator) > myline, "a","b")
+           ) %>% 
     ggplot(aes(x = get(indicator), 
                y = reorder(buyer_city, get(indicator)),
                txt = Variable)
                ) +
-    geom_col(fill = "#14b795") +
+    geom_col(aes(fill = fact), show.legend = F) +
+    scale_fill_manual(values = c(mycolor, "gray")) +
+    geom_vline(xintercept = myline, linetype = "dashed") +
+    guides(fill = "none") +
     labs(y = NULL,
          x = NULL,
          title = sprintf("%s score", input$dropdown)
          )+
     theme_classic() 
   
-  ggplotly(bar, tooltip = "txt") 
+  p <- ggplotly(bar, tooltip = "txt") 
   
-
-  # data_bar %>%
-  #   select(buyer_city, WIRI, wiri_inv, wiri_ops, wiri_cui) %>%
-  #   gather(Indicator, Value, wiri_inv:wiri_cui) %>%
-  #   ggplot(aes(x = reorder(buyer_city, desc(WIRI)), y = Value)) +
-  #   geom_col(aes(fill = Indicator), position = position_dodge(width=.9), width = .8) +
-    # geom_col(data = data_bar, aes(x = buyer_city, y = WIRI), color = "black", fill = "#14b795", alpha = 0.2) +
-  #   coord_cartesian(ylim = c(0,100)) +
-  #   labs(x=NULL,
-  #        y="WIRI Score",
-  #        fill="WIRI Pillar:",
-  #        ) +
-  #   theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  p <- layout(
+    p,
+    annotations = list(
+      x = 0.5,
+      y = -0.15,
+      text = sprintf("Average %s score in top 10 cities, vertical line is the indicator average.", input$dropdown),
+      showarrow = F,
+      xref = 'paper',
+      yref = 'paper',
+      xanchor = 'center',
+      yanchor = 'top',
+      font = list(size = 8)
+    )
+  )
+  
+  p
+  
 
 })
 
@@ -547,11 +584,25 @@ output$wiri_time <- renderPlotly({
     input$dropdown == "Interactions" ~ "wiri_cui_ts"
   )
   
+  mycolor = case_when(
+    input$dropdown == "WIRI" ~ "#14b795",
+    input$dropdown == "Operations" ~ "#8b0000",
+    input$dropdown == "Investments" ~ "#088efc",
+    input$dropdown == "Interactions" ~ "#ffb90f"
+  )
+
   top_cities <- df_summaries() %>%
     group_by(buyer_city) %>%
     summarise(counts = sum(count_total)) %>%
     arrange(desc(counts)) %>%
     head(5)
+  
+  myline = case_when(
+    input$dropdown == "WIRI" ~ mean(df_wiri_cross()$WIRI),
+    input$dropdown == "Operations" ~ mean(df_wiri_cross()$wiri_ops),
+    input$dropdown == "Investments" ~ mean(df_wiri_cross()$wiri_inv),
+    input$dropdown == "Interactions" ~ mean(df_wiri_cross()$wiri_cui)
+  )
 
   data_time <- df_wiri_time() %>%
     filter(buyer_city %in% top_cities$buyer_city)
@@ -563,18 +614,36 @@ output$wiri_time <- renderPlotly({
     ggplot(aes(x = year, y = get(indicator4), group = 1,
                txt = Variable
                )) +
-    geom_line(color = "#14b795") +
+    geom_line(color = mycolor) +
+    geom_hline(yintercept = myline, linetype = "dashed") +
     facet_wrap(~buyer_city,
                nrow = 1) +
     labs(x = NULL,
-         title = sprintf("%s time series", input$dropdown),
+         title = sprintf("%s score over time", input$dropdown),
          y = NULL
          ) +
     theme_classic() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)
           )
   
-  ggplotly(time, tooltip = "txt")
+  p <- ggplotly(time, tooltip = "txt")
+  
+  p <- layout(
+    p,
+    annotations = list(
+      x = 0.5,
+      y = -0.3,
+      text = sprintf("Average %s score for top 5 cities by year, horizontal line represents the global average by indicator.", input$dropdown),
+      showarrow = F,
+      xref = 'paper',
+      yref = 'paper',
+      xanchor = 'center',
+      yanchor = 'top',
+      font = list(size = 8)
+    )
+  )
+  
+  p
 
 })
 
@@ -594,6 +663,13 @@ output$number_contracts <- renderPlotly({
     input$dropdown == "Interactions" ~ "wiri_cui"
   )
   
+  mycolor = case_when(
+    input$dropdown == "WIRI" ~ "#14b795",
+    input$dropdown == "Operations" ~ "#8b0000",
+    input$dropdown == "Investments" ~ "#088efc",
+    input$dropdown == "Interactions" ~ "#ffb90f"
+  )
+
   top_cities <- df_summaries() %>%
     group_by(buyer_city) %>%
     summarise(counts = sum(count_total)) %>%
@@ -606,20 +682,37 @@ output$number_contracts <- renderPlotly({
     summarise(counts = sum(get(indicator2)))
 
   contracts <- data_contracts %>%
-    mutate(Variable = paste0("<br>",input$dropdown, " ", counts)) %>% 
+    mutate(Variable = paste0("<br>", counts, " ", input$dropdown, " Contracts")) %>% 
     ggplot(aes(x = counts, y = reorder(buyer_city, counts),
                txt = Variable
                )) +
-    geom_point(color = "#14b795") +
+    geom_point(color = mycolor) +
     geom_segment(aes(x = 0, xend = counts, y = buyer_city, yend = buyer_city),
-                 color = "#14b795") +
+                 color = mycolor) +
     labs(y = NULL, 
          x = NULL,
-         title = sprintf("%s contracts", input$dropdown)
-         ) +
+         title = sprintf("%s contracts", input$dropdown)) +
     theme_classic()
   
-  ggplotly(contracts, tooltip = "txt")
+  p <- ggplotly(contracts, tooltip = "txt")
+  
+  
+  p <- layout(
+    p,
+    annotations = list(
+      x = 0.5,
+      y = -0.15,
+      text = sprintf("Total number of %s contracts in top 10 cities", input$dropdown),
+      showarrow = F,
+      xref = 'paper',
+      yref = 'paper',
+      xanchor = 'center',
+      yanchor = 'top',
+      font = list(size = 8)
+    )
+  )
+  
+  p
   
   })
 
@@ -637,7 +730,7 @@ output$wiri_table <- renderTable({
 
 output$download_button <- renderUI({
   if (!is.null(df_wiri_cross())) {
-    downloadButton("wiri_csv", "Download WIRI CSV")
+    downloadButton("wiri_csv", "Download WIRI Timeseries")
   }
 })
 
@@ -652,10 +745,10 @@ output$kpi_averages <- renderUI({
   
   markdown(
     sprintf(
-    "### Averages: WIRI (%s), Investments (%s), Operations (%s), Interactions (%s)",
-    m_wiri, m_inv, m_op, m_cui
+      "### Averages (all years): 
+      #### WIRI <span style='color: #14b795;'>%s</span>, Investments <span style='color: #088efc;'>%s</span>, Operations <span style='color: #8b0000;'>%s</span>, Interactions <span style='color: #ffb90f;'>%s</span>",
+      m_wiri, m_inv, m_op, m_cui
     ))
-  
 
 })
 
