@@ -6,44 +6,83 @@ library(plotly)
 
 function(input, output, session) {
   
-  # Maximum upload size 10mb
   options(shiny.maxRequestSize = 10*1024^2)
+  
   names_contracts <- c('contract_title', 'buyer_name', 'winner_name', 'buyer_city', 'final_value', 'bids_count', 'bid_deadline', 'firstcall_date', 'procedure_type', 'award_date')
+  
   names_survey <- c('buyer_city', 'year', 'n', 'bribes')
   
-  # Upload surveys
+  names_keywords <- c('keywords_cui', 'keywords_op', 'keywords_inv')
+  
+  output$no_survey_message <- renderText({
+    "Continue without survey data."
+  })
+  output$select_option_message <- renderText({
+    "Please select an option to continue."
+  })
+  
+  file_message1 <- reactiveVal()
+  
+  output$file_message1 <- renderText({
+    file_message1()
+  })
+  
+  output$ui_survey <- renderUI({
+    if (input$survey_tf == "Yes") {
+      fluidPage(
+        fileInput("file1", "Choose a CSV file"),
+        textOutput("file_message1")
+      )
+      
+    } else if (input$survey_tf == "No") {
+      fluidPage(textOutput("no_survey_message"))
+      
+    } else {
+      fluidPage(textOutput("select_option_message"))
+    }
+  })
+  
+  input_survey <- reactiveVal()
+  
+  observe({
+    if (input$survey_tf == "No") {
+      input_survey(
+        data.frame(
+          buyer_city = NA,
+          year = NA,
+          n = NA,
+          bribes = NA
+        )
+      )
+    }
+  })
+  
   observeEvent(input$file1, {
     req(input$file1)  
     
-    # Check if the file is a CSV
     if (tolower(tools::file_ext(input$file1$name)) != "csv") {
-      output$file_message1 <- renderText("File is not a CSV")
-      return()  # Exit the observeEvent, as the file is not a CSV
+      file_message1("File is not a CSV")
+      return()  
     }
     
-    # Read the uploaded CSV file
     data1 <- read.csv(input$file1$datapath)
     
-    # Check if the variable names in the file are the same as in names_survey
     if (all(colnames(data1) %in% names_survey) && length(colnames(data1)) == length(names_survey)) {
-      output$file_message1 <- renderText("File is correct")
+      file_message1("File is correct.")
+      input_survey(data1)  
     } else {
-      output$file_message1 <- renderText("Variable names are incorrect")
+      file_message1("Variable names are incorrect")
     }
   })
-
-  # INPUT FILES
-  input_survey <- reactive({
-    req(input$file1)  # Check if the user has uploaded a file
-    read.csv(input$file1$datapath)  # Read the uploaded CSV file
-  })
+  
+  # ----------------------------------------------------------------------------
   
   output$contracts_ui <- renderUI({
     req(input_survey())
-    if (!is.null(input_survey())) {
+    if (!is.null(input_survey()) && input$survey_tf != "Select Option") {
       
       fluidPage(
-        titlePanel("Upload Procurement File"),
+        titlePanel("Procurement Data"),
         fileInput("file2", "Choose a CSV file"),
         textOutput("file_message2")
       )
@@ -54,79 +93,261 @@ function(input, output, session) {
   observeEvent(input$file2, {
     req(input$file2)  
     
-    # Check if the file is a CSV
     if (tolower(tools::file_ext(input$file2$name)) != "csv") {
       output$file_message2 <- renderText("File is not a CSV")
       return()  # Exit the observeEvent, as the file is not a CSV
     }
     
-    # Read the uploaded CSV file
     data2 <- read.csv(input$file2$datapath)
     
-    # Check if the variable names in the file are the same as in names_survey
     if (all(colnames(data2) %in% names_contracts) && length(colnames(data2)) == length(names_contracts)) {
-      output$file_message2 <- renderText("File is correct")
+      output$file_message2 <- renderText("File is correct.")
     } else {
       output$file_message2 <- renderText("Variable names are incorrect")
     }
   })
   
-  # INPUT FILES
   input_contracts <- reactive({
     req(input$file2)  
     read.csv(input$file2$datapath)  
   })
   
-  output$keywords_ui <- renderUI({
-    req(input_contracts())
-    if (!is.null(input_contracts())) {
-      
-      fluidPage(h2("Enter Keywords"),
-      
-      # Input field for text
-      textInput("keywords_cui", "Interactions:", value = "agua+|acua+|hidr+"),
-      textInput("keywords_op", "Operations:", value = "maquinaria+|equip+"),
-      textInput("keywords_inv", "Investments:", value = "construc+"),
-      
-      # Submit button
-      actionButton("submit_btn", "Submit"))
   
+  # ----------------------------------------------------------------------------
+  
+  prev_selected <- reactiveVal("Select Option")
+  
+  output$keywordsmessage <- renderText({
+    if (input$keywords == "Select Option") {
+      return("Please select an option to continue.")
+    } else if (input$keywords %in% c("Spanish", "English")) {
+      return("Click submit and continue.")
+    } else if (input$keywords == "Custom") {
+      return("Upload custom keywords file.")
     }
   })
   
-  submitted_values <- reactiveValues(keywords_cui = "agua+|acua+|hidr+", keywords_op = "maquinaria+|equip+", keywords_inv = "construc+")
+  output$keywords_dropdown <- renderUI({
+    req(input_contracts())
+    if (!is.null(input_contracts())) {
+
+      fluidPage(h2("Keywords"),
+                
+                selectInput(
+                  inputId = "keywords", 
+                  label = "Select keywords:",
+                  choices = c("Select Option","Spanish", "English", "Custom"), 
+                  selected = prev_selected()
+                ),
+                textOutput("keywordsmessage")
+                )
+      
+    }
+  })
+  
+  output$keywords_fileinput <- renderUI({
+    req(input_contracts())
+    if (!is.null(input$keywords) && input$keywords == "Custom") {
+      fileInput("customkeys", "Choose a CSV file")
+    }
+  })
+
+  output$action <- renderUI({
+    req(input_survey())
+    if (!is.null(input$keywords) && input$keywords != "Select Option") {
+      actionButton("submit_btn", "Submit")
+    }
+  })
+  
+  input_keywords <- reactiveVal()
+  
+  observe({
+    req(input$keywords) 
+    prev_selected(input$keywords)
+    
+    if (input$keywords == "Spanish") {
+      input_keywords(
+        readr::read_csv("data/wiri_keywords_spanish.csv")
+        )
+    } else if (input$keywords == "English") {
+      input_keywords(
+        readr::read_csv("data/wiri_keywords_english.csv")
+        )
+    } 
+  })
+  
+  file_message3 <- reactiveVal()
+  
+  output$file_message3 <- renderText({
+    file_message3()
+  })
+  
+  output$key_message2 <- renderUI({
+    req(input_survey())
+    if (!is.null(input$keywords) && input$keywords == "Custom") {
+        textOutput("file_message3")
+    }
+  })
+  
+  observeEvent(input$customkeys, {
+    req(input$customkeys)
+
+    if (tolower(tools::file_ext(input$customkeys$name)) != "csv") {
+      file_message3("File is not a CSV.")
+      return()
+    }
+
+    data3 <- read.csv(input$customkeys$datapath)
+
+    if (all(colnames(data3) %in% names_keywords) && length(colnames(data3)) == length(names_keywords)) {
+      file_message3("File is correct. Click submit and continue.")
+      input_keywords(data3)
+    } else {
+      file_message3("Variable names are incorrect.")
+    }
+  })
+  
+  # ----------------------------------------------------------------------------
+
   runClick <- reactiveVal(0)
   
   observeEvent(input$submit_btn, {
+    req(input_keywords())
+    prev_selected(input$keywords)
+
+    df_keys = input_keywords()
     
-    if (!is.null(input$keywords_cui) && input$keywords_cui != "" &
-        !is.null(input$keywords_op) && input$keywords_op != "" &
-        !is.null(input$keywords_inv) && input$keywords_inv != "") {
-      output$key_message <- renderText("Keywords are correct")
-    } else {
-      output$key_message <- renderText("Please enter text before submitting.")
-    }
+    cui_k <- df_keys %>%
+      filter(!is.na(keywords_cui)) %>%
+      pull(keywords_cui) %>%
+      paste(collapse = "|") %>%
+      tolower() %>%
+      stringi::stri_trans_general("Latin-ASCII")
     
-    validate(
-      need(!is.null(input$keywords_cui) && input$keywords_cui != "", "Please enter text before submitting."),
-      need(!is.null(input$keywords_op) && input$keywords_op != "", "Please enter text before submitting."),
-      need(!is.null(input$keywords_inv) && input$keywords_inv != "", "Please enter text before submitting.")
-    )
+    op_k <- df_keys %>%
+      filter(!is.na(keywords_op)) %>%
+      pull(keywords_op) %>%
+      paste(collapse = "|") %>%
+      tolower() %>%
+      stringi::stri_trans_general("Latin-ASCII")
     
-    submitted_values$keywords_cui <- input$keywords_cui
-    submitted_values$keywords_op <- input$keywords_op
-    submitted_values$keywords_inv <- input$keywords_inv
+    in_k <- df_keys %>%
+      filter(!is.na(keywords_inv)) %>%
+      pull(keywords_inv) %>%
+      paste(collapse = "|") %>%
+      tolower() %>%
+      stringi::stri_trans_general("Latin-ASCII")
     
     output$output_text <- renderPrint({
-      paste("Keyords used. ",
-            "Interactions:", submitted_values$keywords_cui,
-            "Operations:", submitted_values$keywords_op,
-            "Investments:", submitted_values$keywords_inv)
+      c("Keywords used:",
+      paste("Investments:", in_k),
+      paste("Operations:", op_k),
+      paste("Interactions:", cui_k)
+      )
+      
     })
     runClick(runClick() + 1)
   })
+  
+  # ----------------------------------------------------------------------------
+  
+  text_dashboard <- reactiveVal()
+  
+  output$text_dashboard <- renderText({
+    text_dashboard()
+  })
+  
+  observe({
+    req(input_keywords())
+    
+    if (!is.null(input_keywords())) {
+      
+      if (all(colnames(input_keywords()) %in% names_keywords)){ # change to condition! 
+        text_dashboard("All files are correct. Continue to the dashboard (above).")
+      }
+      
+    } else {
+      return()
+    }
+    
+  })
+  
+  output$diagnostics_ui <- renderUI({
+    req(runClick() > 0) 
+    if (!is.null(input_keywords())) {
+      
+      fluidPage(
+        h2("Diagnostics"),
+        textOutput("text_dashboard")
+        # textOutput("merge_message"),
+        # textOutput("weights_message")
+      )
+      
+    }
+  })
+  
+  # ----------------------------------------------------------------------------
+  # Keywords Direct Input START
+  # ----------------------------------------------------------------------------
+  
+  # output$keywords_ui <- renderUI({
+  #   req(input_contracts())
+  #   if (!is.null(input_contracts())) {
+  #     
+  #     fluidPage(h2("Enter Keywords"),
+  #     
+  #     # Input field for text
+  #     textInput("keywords_cui", "Interactions:", value = "agua+|acua+|hidr+"),
+  #     textInput("keywords_op", "Operations:", value = "maquinaria+|equip+"),
+  #     textInput("keywords_inv", "Investments:", value = "construc+"),
+  #     
+  #     # Submit button
+  #     actionButton("submit_btn", "Submit"))
+  # 
+  #   }
+  # })
 
-  # WIRI CALCULATIONS
+  # submitted_values <- reactiveValues(keywords_cui = "agua+|acua+|hidr+", keywords_op = "maquinaria+|equip+", keywords_inv = "construc+")
+  # runClick <- reactiveVal(0)
+  # 
+  # observeEvent(input$submit_btn, {
+  # 
+  #   if (!is.null(input$keywords_cui) && input$keywords_cui != "" &
+  #       !is.null(input$keywords_op) && input$keywords_op != "" &
+  #       !is.null(input$keywords_inv) && input$keywords_inv != "") {
+  #     output$key_message <- renderText("Keywords are correct")
+  #   } else {
+  #     output$key_message <- renderText("Please enter text before submitting.")
+  #   }
+  # 
+  #   validate(
+  #     need(!is.null(input$keywords_cui) && input$keywords_cui != "", "Please enter text before submitting."),
+  #     need(!is.null(input$keywords_op) && input$keywords_op != "", "Please enter text before submitting."),
+  #     need(!is.null(input$keywords_inv) && input$keywords_inv != "", "Please enter text before submitting.")
+  #   )
+  # 
+  #   submitted_values$keywords_cui <- input$keywords_cui
+  #   submitted_values$keywords_op <- input$keywords_op
+  #   submitted_values$keywords_inv <- input$keywords_inv
+  # 
+  #   output$output_text <- renderPrint({
+  #     paste("Keyords used. ",
+  #           "Interactions:", submitted_values$keywords_cui,
+  #           "Operations:", submitted_values$keywords_op,
+  #           "Investments:", submitted_values$keywords_inv)
+  #   })
+  #   runClick(runClick() + 1)
+  # })
+  
+  # ----------------------------------------------------------------------------
+  # Keywords Direct Input END
+  # ----------------------------------------------------------------------------
+
+  
+  # ----------------------------------------------------------------------------
+  # WIRI Calculations
+  # ----------------------------------------------------------------------------
+  
   df_summaries <- reactive({
     
     req(runClick() > 0) 
@@ -139,9 +360,28 @@ function(input, output, session) {
   n_areas = 10
   df_contracts = input_contracts() 
   df_survey =  input_survey() 
-  inv_keywords = submitted_values$keywords_inv
-  op_keywords = submitted_values$keywords_op
-  int_keywords = submitted_values$keywords_inv
+  df_keywords = input_keywords()
+
+  int_keywords = df_keywords %>%
+    filter(!is.na(keywords_cui)) %>%
+    pull(keywords_cui) %>%
+    paste(collapse = "|") %>%
+    tolower() %>%
+    stringi::stri_trans_general("Latin-ASCII")
+  
+  op_keywords = df_keywords %>%
+    filter(!is.na(keywords_op)) %>%
+    pull(keywords_op) %>%
+    paste(collapse = "|") %>%
+    tolower() %>%
+    stringi::stri_trans_general("Latin-ASCII")
+  
+  inv_keywords = df_keywords %>%
+    filter(!is.na(keywords_inv)) %>%
+    pull(keywords_inv) %>%
+    paste(collapse = "|") %>%
+    tolower() %>%
+    stringi::stri_trans_general("Latin-ASCII")
   
   # Convert to Date objects
   df_contracts$bid_deadline <- as.Date(df_contracts$bid_deadline, format = "%Y-%m-%d")
@@ -536,9 +776,9 @@ output$wiri_cross <- renderPlotly({
     filter(buyer_city %in% top_cities$buyer_city)
   
   bar <- data_bar %>%
-    mutate(Variable = paste(input$dropdown, "Avg. Score ", round(get(indicator))),
-           fact = ifelse(get(indicator) > myline, "a","b")
-           ) %>% 
+    mutate(Variable = paste0("<br>", "The bar represents the avg. score for the <br> composite WIRI indicator or one of its <br> sub-components (Investments, Operations, Interactions). <br> Top cities by total number of contracts are shown. <br> In ", buyer_city, " the average ", input$dropdown, " score is ", round(get(indicator)), ". <br> The vertical line is the country indicator average. <br> Bars in gray are cities below the country average."),
+    fact = ifelse(get(indicator) > myline, "a","b")
+    ) %>% 
     ggplot(aes(x = get(indicator), 
                y = reorder(buyer_city, get(indicator)),
                txt = Variable)
@@ -608,8 +848,7 @@ output$wiri_time <- renderPlotly({
     filter(buyer_city %in% top_cities$buyer_city)
 
   time <- data_time %>%
-    mutate(Variable = paste0("<br>", input$dropdown, " ",round(get(indicator4)),
-                             "<br>", "Year ", year
+    mutate(Variable = paste0("<br>", "The line represents the score for the composite WIRI indicator <br> or one of its sub-components (Investments, Operations, Interactions) <br> over time for the top cities by total number of contracts. <br> In ", buyer_city, " the ", input$dropdown, " score is ",round(get(indicator4)), " for the year ", year
                              )) %>% 
     ggplot(aes(x = year, y = get(indicator4), group = 1,
                txt = Variable
@@ -682,7 +921,11 @@ output$number_contracts <- renderPlotly({
     summarise(counts = sum(get(indicator2)))
 
   contracts <- data_contracts %>%
-    mutate(Variable = paste0("<br>", counts, " ", input$dropdown, " Contracts")) %>% 
+    # mutate(Variable = paste0("<br>", counts, " ", input$dropdown, " Contracts")) %>% 
+    
+    mutate(Variable = paste0("<br>", "The points represents the number of contracts for the <br> composite WIRI indicator or one of its <br> sub-components (Investments, Operations, Interactions). <br> Top cities by total number of contracts are shown. <br> In ", buyer_city, " there are ", counts," ",input$dropdown, "-related contracts.")
+    ) %>% 
+    
     ggplot(aes(x = counts, y = reorder(buyer_city, counts),
                txt = Variable
                )) +

@@ -13,38 +13,48 @@ fluidPage(theme = shinytheme("flatly"),
                               fluidRow(
                               
                                 column(4,  
-                              
-                              titlePanel("Upload Survey File"),
-                              fileInput("file1", "Choose a CSV file"),
-                              textOutput("file_message1"),
+
+                                fluidPage(h2("Survey Data"),
+                                          selectInput(
+                                                   inputId = "survey_tf", 
+                                                   label = "Do you have survey data?",
+                                                   choices = c("Select Option","No", "Yes"),
+                                                   selected = "Select Option"
+                                                 )
+                                       ),
+
+                              uiOutput("ui_survey"),
                               uiOutput("contracts_ui"),
-                              uiOutput("keywords_ui"),
-                              
+                              # uiOutput("keywords_ui"), # uncomment for inline keywords
+                              uiOutput("keywords_dropdown"),
                               br(),
-                              h2("Diagnostics"),
-                              
-                              textOutput("key_message"),
-                              textOutput("merge_message"),
-                              textOutput("weights_message")
+                              fluidPage(
+                              uiOutput("keywords_fileinput"),
+                              uiOutput("key_message2"),
+                              ),
+                              br(),
+                              fluidPage(uiOutput("action")),
+                              uiOutput("diagnostics_ui")
 
                               ),
                               
                               column(8,
                                      
                                      markdown(
-                                       "
-                          ## What is [WIRI](http://www.govtransparency.eu/water-and-sanitation-sector-integrity-risk-index/)?
+                                       '
+                          ## What is <a href="http://www.govtransparency.eu/water-and-sanitation-sector-integrity-risk-index/" target="_blank">WIRI</a>?
                           
-                          The Water Integrity Risk Index (WIRI) is a measurement tool for measuring integrity in the water and sanitation sector at the level of cities. It relies on public procurement and survey data in order to calculate a composite indicator which ranges between 0 and 100, where *cities with scores closer to 100 are those that have lower risks of corruption* in this critical sector. 
+                          The Water Integrity Risk Index (WIRI) is a tool for measuring integrity in the water and sanitation sector at the city level. It allows you to assess smaller changes in integrity across cities within a country and over time.
 
-                          Unlike existing indexes, WIRI incorporates both Big Data (for procurement) and traditional statistical (for surveys) methods to develop a multidimensional indicator based on objective data rather than **perceptions** of corruption. To use this tool, two data sets are required, one containing public procurement contracts related to water and sanitation, and another one containing survey data on direct experiences with corruption (i.e. bribery). 
+                          WIRI produces a score between 0 and 100. *Cities with scores closer to 100 have lower risks of corruption.*
 
-                          In order to get as clear a picture as possible of corruption and integrity trends, WIRI is calculated at the level of cities. This enables the assessment of smaller changes in integrity both across cities and over time. Though WIRI has been implemented in several countries already, this tool is designed to calculate the index for cities within a single country. 
+                          WIRI is not based on perceptions, but on both Big Data on procurement and (if available) surveys. To use this tool, you need data: 1) on public procurement contracts related to water and sanitation, and 2) (optionally) survey data on direct experiences with corruption (i.e. bribery) in the sector.
 
-                          The public procurement data that is uploaded into this online tool is classified into three pillars: a) *operations* contracts for day-to-day water and sanitation activities, b) *investments* for large scale projects, and c) *interactions* for contracts signed with water utilities. This classification is based on keywords (see below), which can be defined in this tool once the data has been uploaded correctly. Survey data consists of ratios of bribery admissions for water and sanitation services at the city level. 
+                          Once your data set(s) are in the the necessary format, you can upload it/them to the **control panel** (on the **left**). The manual will guide you in creating new water and sanitation procurement data sets from publically available information, as well as the necessary format for uploading survey data. **<a href="https://drive.google.com/drive/folders/1eUMiFvCRGX3KOMx8GmL2kJ0qkNTM8xRs?usp=drive_link" target="_blank">Here</a>** you can find the **the example data sets** on procurement and survey data for Peru (Spanish). **<a href="https://drive.google.com/drive/folders/16kbRFHP3DL2b6p28eUf6VS_TCgEoi1Pg" target="_blank">Here</a>** you can find a **public the repository of procurement and survey data sets** created by other users as well as the team behind WIRI. You may contribute to this repository by uploading your own data sets and notifying us using this **<a href="https://docs.google.com/forms/d/1Qc1HpNohV7tntYITGQD7r3ozxMmz0-Wu0NXz5rX8SEI/viewform?edit_requested=true">submission form</a>**. 
+                          
+                          Once all data sets are formatted correctly, they should be uploaded to the tool and it will calculate the WIRI score for each city/year. You will see the results summary in the **dashboard** panel (**above**).
 
-                          This online tool and the accompanying [manual]() will guide you through the process of constructing these two data sets in a specific format in order to upload them to the control panel on the left. Once they have been created and uploaded correctly, the tool will automatically calculate the WIRI score for each city and display a summary of the results in the dashboard panel (above). You may find example data sets [here]() and a walkthrough of the main steps below. 
-                                       "
+                                       '
                                      ),
                               
 
@@ -71,63 +81,37 @@ fluidPage(theme = shinytheme("flatly"),
                                      div(class="embed-container", 
                                          HTML('<iframe src="https://www.youtube.com/embed/ss4mRCAijRI" frameborder="0" allowfullscreen></iframe>')),
                                      
-                          markdown("
+                          markdown(
+                          '
                           ## How to use this tool?
                           
-                          To use this tool, you will need two data sets (procurement and survey) which are constructed in the format detailed in the [WIRI tool manual](). You may also use the example data sets (see below).
+                          To use this tool, you will need to upload some data sets: procurement (**mandatory**), survey (**optional**) and keywords (**optional**). These data sets must be constructed in the format detailed in the **<a href="https://drive.google.com/drive/folders/1eUMiFvCRGX3KOMx8GmL2kJ0qkNTM8xRs?usp=drive_link" target="_blank">WIRI tool manual</a>**. We provide some **<a href="https://drive.google.com/drive/folders/1eUMiFvCRGX3KOMx8GmL2kJ0qkNTM8xRs?usp=drive_link" target="_blank">example data sets</a>** (Peru) but you may also upload your own.
                           
-                          Once you have the two required data sets, please follow these steps:
+                          Once you have the required data set(s), please follow these steps:
                           
-                          1. Upload survey data (CSV)
-                          2. Upload procurement data (CSV)
-                          3. Submit the keywords for each of the pillars using regular expressions (see below)
-                          4. Make sure the **diagnostics** section verifies that pillars are calculated correctly
-                          5. Click `submit`
-                          6. Go to the **dashboard** in the next tab and view the results
-                          7. Change the parameters to observe different WIRI sub indicators
+                          1. Select `no survey` OR upload **survey data** (CSV) when available
+                          2. Upload **procurement data** (CSV)
+                          3. Select **keywords** language (`Spanish`, `English`) OR upload your own `custom` keywords (CSV)
+                          4. Click `submit`
+                          5. The section **diagnostics** will inform you if the calculations were successfull
+                          6. Go to the **dashboard** tab and view the results
+                          7. In the dashboard, you can explore the composite **WIRI score** and its sub-components.
                           
-                          #### You may download the **example data sets** [here](https://drive.google.com/drive/folders/1eUMiFvCRGX3KOMx8GmL2kJ0qkNTM8xRs?usp=drive_link).
-                          
-                          "),
+                          '
+                          ),
                           
                          div(class="embed-container",
-                             HTML('<iframe src="https://www.youtube.com/embed/r9ZeF3J2T7Y" frameborder="0" allowfullscreen></iframe>')),
+                             HTML('<iframe src="https://www.youtube.com/embed/pQ72iamT1YI" frameborder="0" allowfullscreen></iframe>')),
 
-                                              
-                          markdown("
+                         markdown('
+                                                            
+                          ## WIRI Data Repository
+                          
+                          You may also consult (*and contribute to*) the repository of WIRI data sets <a href="https://drive.google.com/drive/folders/16kbRFHP3DL2b6p28eUf6VS_TCgEoi1Pg" target="_blank">here</a>. If you wish to share your data sets with other users, please fill out the <a href="https://docs.google.com/forms/d/1Qc1HpNohV7tntYITGQD7r3ozxMmz0-Wu0NXz5rX8SEI/" target="_blank">data sharing form</a> **before** you upload them to the shared repository. Keep in mind that data sets uploaded to the tool are **not automatically shared** in the repository. 
+                          
+                                  ')                     
 
-                          ### Keywords and Regex
-                          
-                          One of the main advantages of WIRI is its built-in flexibility. The procurement contracts that are related to water and sanitation which are uploaded to the tool are classified into three pillars based on keywords. However, since these keywords can be very context-specific, this tool allows users to modify and expand on the list of keywords that are used to classify contracts into one of the three pillars. To achieve this, it uses **regex** or regular expressions. 
-                          
-                          Regular Expression (regex) is a powerful and flexible text-searching tool that is used to match patterns within strings (i.e. text as data). It provides a concise and flexible means for matching strings of text, such as particular characters, words, or patterns of characters, facilitating the ability to search within text-based data efficiently. 
-                          
-                          In the command box (left panel), the section **Keywords** will appear after you have uploaded the procurement and survey data sets. The three boxes will allow you to define keywords to flag water contracts into one of three categories: a) operations, b) investments, and c) interactions. Below is an example on how to (re)define such keywords:
-                          * 'agua+': This will match the substring 'agua' followed by one or more occurrences of the character 'a'. For example, it will match 'agua', 'aguaa', 'aguaaa', etc.
-                          * '|': This is the OR operator in regex, which allows for matching one of the alternatives.
-                          * 'agua+|hidr+': This will match all characters containing 'agua' OR 'hidr' such as 'aguas' OR 'hidrografia'.
-                          
-                          For example, if one of the water utilities in your data set is named *calidad y servicio*, then you may change the default `agua+|acua+|hidr+` in the **Interactions** box to include this: `agua+|acua+|hidr+|calidad y servicio`. Based on the language and content of your own procurement data set, you may modify these keywords as you see fit. 
-                          
-                          You may read more about the theory behind these categories in the user [manual]() or in the [working paper](https://www.govtransparency.eu/water-and-sanitation-sector-integrity-risk-index/).
-                      
-                          ## Troubleshooting 
-                          
-                          In order for the WIRI tool to work properly, it requires two CSV data sets with specific variable names. The diagnostics box under the file upload will tell you if the files uploaded are correct or not. It may specify that the 'file is not a CSV' or that the 'variable names are incorrect'. To fix these issues, please consider the following:
-                          
-                          * Make sure that you are uploading CSV files and not Excel files.
-                          * Make sure that you are uploading the data sets to their specified box (e.g. procurement in the procurement upload section)
-                          * Verify that the names of the files are written exactly as specified.
-                          * Verify that no varibles are missing. If there is no information for them, leave them as empty columns (i.e., `NA`) with the correct name. 
-                          * Verify that all of the keyword boxes (three pillars) are specified in the format detailed above `word1|word1|prefix+`
-                          
-                          Variable names should read **exactly** as follows, the order does not matter:
-                          
-                          * For **Surveys**: `buyer_city`, `year`, `n`, `bribes`
-                          
-                          * For **Procurement**: `contract_title`, `buyer_name`, `winner_name`, `buyer_city`, `final_value`, `bids_count`, `bid_deadline`, `firstcall_date`, `procedure_type`, `award_date`
-                                             
-                          ")))),
+                         ))),
 
                     tabPanel("Dashboard",
                              h2("Water Integrity Risk Indicator Results"),
@@ -137,7 +121,7 @@ fluidPage(theme = shinytheme("flatly"),
                                ),
                                column(2,
                                       selectInput("dropdown", "Select an indicator:",
-                                         choices = c("WIRI", "Operations", "Investments", "Interactions"),
+                                         choices = c("WIRI",  "Investments", "Operations", "Interactions"),
                                          selected = "WIRI"))
                                ),
                              fluidRow(
@@ -150,7 +134,7 @@ fluidPage(theme = shinytheme("flatly"),
                                       
                                       fluidRow(
                                       column(6,
-                                            plotlyOutput("wiri_cross", height = "250px")
+                                             plotlyOutput("wiri_cross", height = "250px"),
                                             ),
                                       column(6,
                                              plotlyOutput("number_contracts", height = "250px")
@@ -162,18 +146,73 @@ fluidPage(theme = shinytheme("flatly"),
                              verbatimTextOutput("output_text"),
                              br(),
                              uiOutput("download_button")
-                       )
+                       ),
+                    
+                    tabPanel("WIRI Manual",
+                             
+                             h2("How to contruct data sets for WIRI"),
+                             br(),
+                             tags$iframe(style="height:600px; width:100%", src="WIRI_manual.pdf"),
+                             br(),
+                             h2("Data Sharing Form"),
+                             br(),
+                             HTML('<iframe src="https://docs.google.com/forms/d/e/1FAIpQLScBM6QARyb0aCQTmC4IFW9ccAyLFKj8czr7RReiegxYV9m2Yw/viewform?embedded=true" width="100%" height="500px" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>')
+                    )
+                
                      ),
+          br(),
           
+          fluidPage(
+          fluidRow(style = "background-color: #2d3d50;",
+                   br()),
           fluidRow(
             br(),
             column(4,
-                   img(src = 'gti.png', height = '70px')
+                   
+                   tags$a(href = "https://www.govtransparency.eu/", 
+                          target = "_blank",
+                          tags$img(src = 'gti.png', height = '70px')
+                   )
+                   # img(src = 'gti.png', height = '70px')
             ),
-            column(4),
             column(4,
-                   img(src = 'win.jpg', height = '70px')
+                   
+    
+            ),
+            column(4,
+                   
+                   tags$a(href = "https://www.waterintegritynetwork.net/", 
+                          target = "_blank",
+                          tags$img(src = 'WIN_logo_new.jpeg', height = '55px')
+                   )
+                   # img(src = 'WIN_logo_new.jpeg', height = '55px') 
             )
+
+          ),
+          fluidRow(
+            HTML('
+    <div style="text-align: center; margin-top: 20px;">
+        <p style="font-size: 16px; color: #333;">
+            For any issues or questions regarding this online tool, please email the developer: 
+            <a href="mailto:alhdzsz@gmail.com" style="color: #29c0a1; text-decoration: none;">
+                Alfredo Hernandez Sanchez
+            </a>
+        </p>
+    </div>
+'),
+            
+            HTML('
+            <div style="text-align: center; margin-top: 20px;">
+        <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">
+            <img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png" />
+        </a>
+        <br />
+        This work is licensed under a
+        <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">
+            Creative Commons Attribution-ShareAlike 4.0 International License
+        </a>.
+    ')
+          )
           )
 
 )
