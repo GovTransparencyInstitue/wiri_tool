@@ -8,6 +8,8 @@ The Water Integrity Risk Index (WIRI) is a tool for measuring integrity in the w
 
 WIRI produces a score between 0 and 100. Cities with scores closer to 100 have lower risks of corruption.
 
+WIRI is not based on perceptions, but on both Big Data on procurement and (if available) surveys. To use this tool, you need data: 1) on public procurement contracts related to water and sanitation, and 2) (optionally) survey data on direct experiences with corruption (i.e. bribery) in the sector.
+
 ## How to use this tool?
 
 To use this tool, you will need to upload some data sets: procurement (mandatory), survey (optional) and keywords (optional). These data sets must be constructed in the format detailed in the WIRI tool manual (see tab above). We provide some example data sets based on procurement and survey data for Peru.
