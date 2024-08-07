@@ -4,7 +4,7 @@ library(plotly)
 
 fluidPage(theme = shinytheme("flatly"),
 
-          titlePanel(markdown("WIRI: Water and Sanitation Sector Integrity Risk Index")),
+          titlePanel(markdown("Water and Sanitation Sector Integrity Risk Index (WIRI)")),
           
           navbarPage(fluidPage(" "),
                                

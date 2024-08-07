@@ -30,7 +30,7 @@ function(input, output, session) {
   output$ui_survey <- renderUI({
     if (input$survey_tf == "Yes") {
       fluidPage(
-        fileInput("file1", "Choose a CSV file"),
+        fileInput("file1", 'Upload your CSV file (or download an example)'),
         textOutput("file_message1")
       )
       
@@ -83,7 +83,7 @@ function(input, output, session) {
       
       fluidPage(
         titlePanel("Procurement Data"),
-        fileInput("file2", "Choose a CSV file"),
+        fileInput("file2", "Upload your CSV file (or download an example)"),
         textOutput("file_message2")
       )
       
