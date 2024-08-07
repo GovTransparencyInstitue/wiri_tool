@@ -12,7 +12,7 @@ WIRI is not based on perceptions, but on both Big Data on procurement and (if av
 
 ## How to use this tool?
 
-To use this tool, you will need to upload some data sets: procurement (mandatory), survey (optional) and keywords (optional). These data sets must be constructed in the format detailed in the WIRI tool manual (see tab above). We provide some example data sets based on procurement and survey data for Peru.
+To use this tool, you will need to upload some data sets: procurement, survey  and keywords. These data sets must be constructed in the format detailed in the WIRI tool manual. We provide some example data sets based on procurement and survey data for Peru.
 
 Once you have the required data set(s), please follow these steps:
 
