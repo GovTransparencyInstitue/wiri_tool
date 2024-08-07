@@ -776,7 +776,7 @@ output$wiri_cross <- renderPlotly({
     filter(buyer_city %in% top_cities$buyer_city)
   
   bar <- data_bar %>%
-    mutate(Variable = paste0("<br>", "The bar represents the avg. score for the <br> composite WIRI indicator or one of its <br> sub-components (Investments, Operations, Interactions). <br> Top cities by total number of contracts are shown. <br> In ", buyer_city, " the average ", input$dropdown, " score is ", round(get(indicator)), ". <br> The vertical line is the country indicator average. <br> Bars in gray are cities below the country average."),
+    mutate(Variable = paste0("<br> In ", buyer_city, " the average ", input$dropdown, " score is ", round(get(indicator))),
     fact = ifelse(get(indicator) > myline, "a","b")
     ) %>% 
     ggplot(aes(x = get(indicator), 
@@ -800,7 +800,7 @@ output$wiri_cross <- renderPlotly({
     annotations = list(
       x = 0.5,
       y = -0.15,
-      text = sprintf("Average %s score in top 10 cities, vertical line is the indicator average.", input$dropdown),
+      # text = sprintf("Average %s score in top 10 cities, vertical line is the indicator average.", input$dropdown),
       showarrow = F,
       xref = 'paper',
       yref = 'paper',
@@ -848,7 +848,7 @@ output$wiri_time <- renderPlotly({
     filter(buyer_city %in% top_cities$buyer_city)
 
   time <- data_time %>%
-    mutate(Variable = paste0("<br>", "The line represents the score for the composite WIRI indicator <br> or one of its sub-components (Investments, Operations, Interactions) <br> over time for the top cities by total number of contracts. <br> In ", buyer_city, " the ", input$dropdown, " score is ",round(get(indicator4)), " for the year ", year
+    mutate(Variable = paste0("<br> In ", buyer_city, " the ", input$dropdown, " score is ",round(get(indicator4)), " for the year ", year
                              )) %>% 
     ggplot(aes(x = year, y = get(indicator4), group = 1,
                txt = Variable
@@ -872,7 +872,7 @@ output$wiri_time <- renderPlotly({
     annotations = list(
       x = 0.5,
       y = -0.3,
-      text = sprintf("Average %s score for top 5 cities by year, horizontal line represents the global average by indicator.", input$dropdown),
+      # text = sprintf("Average %s score for top 5 cities by year, horizontal line represents the global average by indicator.", input$dropdown),
       showarrow = F,
       xref = 'paper',
       yref = 'paper',
@@ -921,9 +921,7 @@ output$number_contracts <- renderPlotly({
     summarise(counts = sum(get(indicator2)))
 
   contracts <- data_contracts %>%
-    # mutate(Variable = paste0("<br>", counts, " ", input$dropdown, " Contracts")) %>% 
-    
-    mutate(Variable = paste0("<br>", "The points represents the number of contracts for the <br> composite WIRI indicator or one of its <br> sub-components (Investments, Operations, Interactions). <br> Top cities by total number of contracts are shown. <br> In ", buyer_city, " there are ", counts," ",input$dropdown, "-related contracts.")
+    mutate(Variable = paste0("<br> In", buyer_city, " there are ", counts," ",input$dropdown, "-related contracts.")
     ) %>% 
     
     ggplot(aes(x = counts, y = reorder(buyer_city, counts),
@@ -945,7 +943,7 @@ output$number_contracts <- renderPlotly({
     annotations = list(
       x = 0.5,
       y = -0.15,
-      text = sprintf("Total number of %s contracts in top 10 cities", input$dropdown),
+      text = "",
       showarrow = F,
       xref = 'paper',
       yref = 'paper',

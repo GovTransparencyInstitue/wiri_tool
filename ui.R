@@ -4,7 +4,7 @@ library(plotly)
 
 fluidPage(theme = shinytheme("flatly"),
 
-          titlePanel(markdown("[Water and Sanitation Sector Integrity Risk Index](http://www.govtransparency.eu/water-and-sanitation-sector-integrity-risk-index/)")),
+          titlePanel(markdown("WIRI: Water and Sanitation Sector Integrity Risk Index")),
           
           navbarPage(fluidPage(" "),
                                
@@ -50,7 +50,9 @@ fluidPage(theme = shinytheme("flatly"),
 
                           WIRI is not based on perceptions, but on both Big Data on procurement and (if available) surveys. To use this tool, you need data: 1) on public procurement contracts related to water and sanitation, and 2) (optionally) survey data on direct experiences with corruption (i.e. bribery) in the sector.
 
-                          Once your data set(s) are in the the necessary format, you can upload it/them to the **control panel** (on the **left**). The manual will guide you in creating new water and sanitation procurement data sets from publically available information, as well as the necessary format for uploading survey data. **<a href="https://drive.google.com/drive/folders/1eUMiFvCRGX3KOMx8GmL2kJ0qkNTM8xRs?usp=drive_link" target="_blank">Here</a>** you can find the **the example data sets** on procurement and survey data for Peru (Spanish). **<a href="https://drive.google.com/drive/folders/16kbRFHP3DL2b6p28eUf6VS_TCgEoi1Pg" target="_blank">Here</a>** you can find a **public the repository of procurement and survey data sets** created by other users as well as the team behind WIRI. You may contribute to this repository by uploading your own data sets and notifying us using this **<a href="https://docs.google.com/forms/d/1Qc1HpNohV7tntYITGQD7r3ozxMmz0-Wu0NXz5rX8SEI/viewform?edit_requested=true">submission form</a>**. 
+                          Once your data set(s) are in the the necessary format, you can upload it/them to the **control panel** (on the **left**). The manual will guide you in creating new water and sanitation procurement data sets from publically available information, as well as the necessary format for uploading survey data. You may find the manual in **WIRI manual tab** (**above**), or in **<a href="https://drive.google.com/drive/folders/1eUMiFvCRGX3KOMx8GmL2kJ0qkNTM8xRs" target="_blank">this link</a>**.
+                          
+                          **<a href="https://drive.google.com/drive/folders/1eUMiFvCRGX3KOMx8GmL2kJ0qkNTM8xRs" target="_blank">Here</a>** you can find the **the example data sets** on procurement and survey data for Peru (Spanish). **<a href="https://drive.google.com/drive/folders/16kbRFHP3DL2b6p28eUf6VS_TCgEoi1Pg" target="_blank">Here</a>** you can find a **public the repository of procurement and survey data sets** created by other users as well as the team behind WIRI. You may contribute to this repository by uploading your own data sets and notifying us using this **<a href="https://docs.google.com/forms/d/1Qc1HpNohV7tntYITGQD7r3ozxMmz0-Wu0NXz5rX8SEI/viewform?edit_requested=true">submission form</a>**. 
                           
                           Once all data sets are formatted correctly, they should be uploaded to the tool and it will calculate the WIRI score for each city/year. You will see the results summary in the **dashboard** panel (**above**).
 
@@ -79,13 +81,13 @@ fluidPage(theme = shinytheme("flatly"),
                                                               "))),
                                      
                                      div(class="embed-container", 
-                                         HTML('<iframe src="https://www.youtube.com/embed/ss4mRCAijRI" frameborder="0" allowfullscreen></iframe>')),
+                                         HTML('<iframe src="https://www.youtube.com/embed/cc6WcZrsdIY" frameborder="0" allowfullscreen></iframe>')),
                                      
                           markdown(
                           '
                           ## How to use this tool?
                           
-                          To use this tool, you will need to upload some data sets: procurement (**mandatory**), survey (**optional**) and keywords (**optional**). These data sets must be constructed in the format detailed in the **<a href="https://drive.google.com/drive/folders/1eUMiFvCRGX3KOMx8GmL2kJ0qkNTM8xRs?usp=drive_link" target="_blank">WIRI tool manual</a>**. We provide some **<a href="https://drive.google.com/drive/folders/1eUMiFvCRGX3KOMx8GmL2kJ0qkNTM8xRs?usp=drive_link" target="_blank">example data sets</a>** (Peru) but you may also upload your own.
+                          To use this tool, you will need to upload some data sets: procurement (**mandatory**), survey (**optional**) and keywords (**optional**). These data sets must be constructed in the format detailed in the **WIRI tool manual** (see tab **above**). We provide some **<a href="https://drive.google.com/drive/folders/11n5mSYGp63uPkeCWt618cCjZRfLLyJdn" target="_blank">example data sets</a>** based on procurement and survey data for Peru.
                           
                           Once you have the required data set(s), please follow these steps:
                           
@@ -101,13 +103,13 @@ fluidPage(theme = shinytheme("flatly"),
                           ),
                           
                          div(class="embed-container",
-                             HTML('<iframe src="https://www.youtube.com/embed/pQ72iamT1YI" frameborder="0" allowfullscreen></iframe>')),
+                             HTML('<iframe src="https://www.youtube.com/embed/FlP1ob8sEZY" frameborder="0" allowfullscreen></iframe>')),
 
                          markdown('
                                                             
                           ## WIRI Data Repository
                           
-                          You may also consult (*and contribute to*) the repository of WIRI data sets <a href="https://drive.google.com/drive/folders/16kbRFHP3DL2b6p28eUf6VS_TCgEoi1Pg" target="_blank">here</a>. If you wish to share your data sets with other users, please fill out the <a href="https://docs.google.com/forms/d/1Qc1HpNohV7tntYITGQD7r3ozxMmz0-Wu0NXz5rX8SEI/" target="_blank">data sharing form</a> **before** you upload them to the shared repository. Keep in mind that data sets uploaded to the tool are **not automatically shared** in the repository. 
+                          You may also consult (*and contribute to*) the repository of WIRI data sets **<a href="https://drive.google.com/drive/folders/1ipeexthW0c_EAbhGIUShx5lHM-qMS9xp" target="_blank">here</a>**. If you wish to share your data sets with other users, please fill out the **<a href="https://docs.google.com/forms/d/1Qc1HpNohV7tntYITGQD7r3ozxMmz0-Wu0NXz5rX8SEI/" target="_blank">data sharing form</a>** **before** you upload them to the shared repository. Keep in mind that data sets uploaded to the tool are **not automatically shared** in the repository. 
                           
                                   ')                     
 
@@ -127,20 +129,26 @@ fluidPage(theme = shinytheme("flatly"),
                              fluidRow(
                                column(5,
                                       fluidPage(
-                                        div(style = "height: 500px; overflow-y: scroll;",
+                                        div(style = "height: 600px; overflow-y: scroll;",
                                             tableOutput("wiri_table")
-                                        ))),
+                                        ),
+                                        h6("The table shows the average WIRI score (with each of its three pillars) for all cities in the data set. You may download the full city/year (time-series) data by clicking the button below.")
+                                        )),
                                column(7,
                                       
                                       fluidRow(
                                       column(6,
                                              plotlyOutput("wiri_cross", height = "250px"),
+                                             h6("The bars show the average score for the WIRI indicator or one of its pillars. The vertical dashed line shows the country indicator average. Cities below the country average are shown in gray.")
                                             ),
                                       column(6,
-                                             plotlyOutput("number_contracts", height = "250px")
+                                             plotlyOutput("number_contracts", height = "250px"),
+                                             h6("The points represent the number of procurement contracts found in the cities with most data available. This is available for the WIRI indicator or any one of its three pillars (Investments, Operations, Interactions).")
                                              )
                                       ),
-                                      plotlyOutput("wiri_time", height = "250px")                                      )
+                                      plotlyOutput("wiri_time", height = "250px"),
+                                      h6("The line represents the score for the composite WIRI indicator (or one of its pillars) over time for the top 5 cities with most observations. The horizontal line is the country indicator average.")
+                                      )
                              ),
                              br(),
                              verbatimTextOutput("output_text"),
